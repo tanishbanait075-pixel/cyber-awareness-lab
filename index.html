@@ -1,19 +1,221 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cyber Awareness Lab</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+    main {
+      max-width: 720px;
+      margin: 35px auto;
+      padding: 28px;
+      background: #1e293b;
+      border-radius: 18px;
+    }
+    .tag { color: #38bdf8; font-weight: bold; }
+    .muted { color: #cbd5e1; line-height: 1.6; }
+    .option {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      background: #0f172a;
+      color: white;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .option:hover { border-color: #38bdf8; }
+    button:focus-visible {
+      outline: 3px solid #fbbf24;
+      outline-offset: 3px;
+    }
+    .primary {
+      background: #0284c7;
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 20px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #feedback {
+      margin: 18px 0;
+      line-height: 1.6;
+    }
+    .hidden { display: none; }
+    h1 { line-height: 1.2; }
+  </style>
 </head>
-<body style="font-family:Arial;max-width:700px;margin:60px auto;padding:20px">
+<body>
+<main>
+  <p class="tag">CYBERSECURITY LEARNING PROJECT</p>
   <h1>Cyber Awareness Lab</h1>
-  <h2>Think Before You Click!</h2>
-  <p>Learn to recognize suspicious links and unexpected messages.</p>
-  <ul>
-    <li>Check the sender and website address.</li>
-    <li>Never share passwords on untrusted pages.</li>
-    <li>Don't grant unnecessary camera or microphone access.</li>
-  </ul>
-  <p>This is an educational demonstration, not a login page.</p>
+  <p class="muted">
+    Learn how to recognize suspicious messages, unsafe links
+    and common phishing warning signs.
+  </p>
+
+  <section id="quiz">
+    <p id="progress" class="tag"></p>
+    <h2 id="question"></h2>
+    <div id="options"></div>
+    <p id="feedback" aria-live="polite"></p>
+    <button id="next" class="primary hidden">Next question</button>
+  </section>
+
+  <section id="result" class="hidden" aria-live="polite">
+    <h2>Quiz complete!</h2>
+    <p id="score"></p>
+    <p class="muted">
+      Remember: verify unexpected requests using an official
+      website or a trusted contact method.
+    </p>
+    <button id="restart" class="primary">Try again</button>
+  </section>
+</main>
+
+<script>
+const questions = [
+  {
+    q: "You receive an unexpected email claiming your account will be closed unless you act immediately. What should you do?",
+    options: [
+      "Click the email link quickly",
+      "Reply with your password",
+      "Verify through the official website",
+      "Forward it to all your friends"
+    ],
+    answer: 2,
+    why: "Urgent threats can be a phishing warning sign. Visit the official website independently to verify the claim."
+  },
+  {
+    q: "A message asks you to share a one-time password (OTP). What is the safest choice?",
+    options: [
+      "Share it if the sender knows your name",
+      "Never share it; verify the request independently",
+      "Post it in a group for advice",
+      "Send it if the message has a logo"
+    ],
+    answer: 1,
+    why: "Never disclose an OTP to someone who contacts you unexpectedly. A familiar name or logo does not prove identity."
+  },
+  {
+    q: "A website address has a misspelled version of a familiar company name. What should you do?",
+    options: [
+      "Enter details to test the website",
+      "Ignore the spelling difference",
+      "Download its verification app",
+      "Avoid it and find the official address independently"
+    ],
+    answer: 3,
+    why: "Lookalike domains can impersonate legitimate websites. Use a known official address instead."
+  },
+  {
+    q: "An unexpected attachment arrives from an unknown sender. What is the safest action?",
+    options: [
+      "Open it to identify the sender",
+      "Enable macros if asked",
+      "Do not open it; verify the sender first",
+      "Upload it to social media"
+    ],
+    answer: 2,
+    why: "Unexpected attachments may contain harmful content. Verify the sender and follow your organization's security process."
+  },
+  {
+    q: "A message requests an urgent payment and tells you not to contact anyone else. What should you do?",
+    options: [
+      "Verify using a separate trusted contact method",
+      "Pay immediately",
+      "Trust it if the signature looks official",
+      "Send your banking password first"
+    ],
+    answer: 0,
+    why: "Urgency and secrecy are common social-engineering warning signs. Confirm payment requests independently."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const feedbackEl = document.getElementById("feedback");
+const nextBtn = document.getElementById("next");
+
+function showQuestion() {
+  answered = false;
+  const item = questions[current];
+
+  document.getElementById("progress").textContent =
+    `Question ${current + 1} of ${questions.length}`;
+  questionEl.textContent = item.q;
+  optionsEl.replaceChildren();
+  feedbackEl.textContent = "";
+  nextBtn.classList.add("hidden");
+
+  item.options.forEach((option, index) => {
+    const button = document.createElement("button");
+    button.className = "option";
+    button.textContent = option;
+    button.addEventListener("click", () => choose(index));
+    optionsEl.appendChild(button);
+  });
+}
+
+function choose(index) {
+  if (answered) return;
+  answered = true;
+
+  const item = questions[current];
+  if (index === item.answer) score++;
+
+  feedbackEl.textContent =
+    (index === item.answer ? "Correct! " : "Not quite. ") + item.why;
+
+  [...optionsEl.children].forEach(button => {
+    button.disabled = true;
+  });
+
+  nextBtn.textContent =
+    current === questions.length - 1 ? "View results" : "Next question";
+  nextBtn.classList.remove("hidden");
+}
+
+nextBtn.addEventListener("click", () => {
+  if (!answered) return;
+
+  if (current < questions.length - 1) {
+    current++;
+    showQuestion();
+  } else {
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+    document.getElementById("score").textContent =
+      `Your score: ${score} out of ${questions.length}`;
+  }
+});
+
+document.getElementById("restart").addEventListener("click", () => {
+  current = 0;
+  score = 0;
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+  showQuestion();
+});
+
+showQuestion();
+</script>
 </body>
 </html>
